@@ -1,83 +1,48 @@
 using UnityEngine;
 using System.Collections.Generic;
 
-public class CoinPoolManager : MonoBehaviour
+public class ObjectPool : MonoBehaviour
 {
-    public static CoinPoolManager Instance { get; private set; }
+    [SerializeField] private GameObject prefab;
+    [SerializeField] private int initialSize = 10;
     
-    public GameObject coinPrefab;
-    
-    private ObjectPool coinPool;
-    private List<Vector3> coinStartPositions;
-    private List<GameObject> activeCoins;
-    
-    void Awake()
+    private List<GameObject> pool = new List<GameObject>();
+
+    private void Awake()
     {
-        if (Instance != null && Instance != this)
+        for (int i = 0; i < initialSize; i++)
         {
-            Destroy(gameObject);
-            return;
-        }
-        Instance = this;
-        
-        // Find all existing coins in the scene
-        GameObject[] existingCoins = GameObject.FindGameObjectsWithTag("Coin");
-        coinStartPositions = new List<Vector3>();
-        
-        foreach (GameObject coin in existingCoins)
-        {
-            coinStartPositions.Add(coin.transform.position);
-            Destroy(coin); // Remove scene-placed coins
-        }
-        
-        // Create pool
-        coinPool = new ObjectPool(coinPrefab, coinStartPositions.Count);
-        activeCoins = new List<GameObject>();
-        
-        // Spawn all coins from pool
-        SpawnAllCoins();
-    }
-    
-    public void SpawnAllCoins()
-    {
-        foreach (Vector3 position in coinStartPositions)
-        {
-            GameObject coin = coinPool.Get();
-            coin.transform.position = position;
-            activeCoins.Add(coin);
+            CreateNewObject();
         }
     }
-    
-    public void ReturnCoin(GameObject coin)
+
+    private GameObject CreateNewObject()
     {
-        coinPool.Return(coin);
-        activeCoins.Remove(coin);
+        GameObject obj = Instantiate(prefab, transform);
+        obj.SetActive(false);
+        pool.Add(obj);
+        return obj;
     }
-    
-    public void ResetAllCoins()
+
+    public GameObject GetObject()
     {
-        // Return all active coins to pool
-        foreach (GameObject coin in activeCoins)
+        foreach (GameObject obj in pool)
         {
-            coinPool.Return(coin);
+            if (!obj.activeInHierarchy)
+            {
+                obj.SetActive(true);
+                return obj;
+            }
         }
-        activeCoins.Clear();
-        
-        // Respawn them
-        SpawnAllCoins();
+
+        // If pool is empty, expand it
+        GameObject newObj = CreateNewObject();
+        newObj.SetActive(true);
+        return newObj;
     }
-    void OnTriggerEnter2D(Collider2D collision)
-{
-    if (collision.CompareTag("Coin"))
+
+    public void ReturnObject(GameObject obj)
     {
-        GameManager.Instance.AddScore(10);
-        CoinPoolManager.Instance.ReturnCoin(collision.gameObject);
+        obj.SetActive(false);
     }
-}
-public void RestartGame()
-{
-    CoinPoolManager.Instance.ResetAllCoins();
-    GameManager.Instance.ResetGame();
-    SceneManager.LoadScene("GameScene");
-}
 }

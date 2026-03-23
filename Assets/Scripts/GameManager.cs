@@ -57,4 +57,29 @@ public class GameManager : MonoBehaviour
     {
         onGameOver?.Invoke();
     }
+    void OnDestroy()
+    {
+        if (Instance == this)
+        {
+            Instance = null;
+        }
+    }
+    private void OnTriggerEnter2D(Collider2D other)
+{
+    if (other.CompareTag("Coin"))
+    {
+        // Instead of Destroy(other.gameObject);
+        CoinPoolManager.Instance.ReturnCoin(other.gameObject);
+        
+        // Update score via GameManager
+        GameManager.Instance.AddScore(1); 
+    }
+}
+
+// Inside your Jump method
+public void Jump()
+{
+    // ... existing jump logic ...
+    AudioManager.Instance.PlaySoundEffect(AudioManager.Instance.jumpSound);
+}
 }
