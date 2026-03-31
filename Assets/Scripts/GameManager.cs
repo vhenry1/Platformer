@@ -82,4 +82,8 @@ public void Jump()
     // ... existing jump logic ...
     AudioManager.Instance.PlaySoundEffect(AudioManager.Instance.jumpSound);
 }
+public int GetScore()
+{
+    return score;
+}
 }
